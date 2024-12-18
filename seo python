@@ -1,0 +1,40 @@
+import requests
+from bs4 import BeautifulSoup
+
+def get_seo_details(url):
+    # Fetch the website content
+    response = requests.get(url)
+    if response.status_code == 200:
+        html_content = response.text
+        soup = BeautifulSoup(html_content, 'html.parser')
+        seo_details = {}
+        title = soup.title.string if soup.title else 'No title found'
+        seo_details['Title'] = title
+        seo_details['Title Suggestion'] = "Ensure the title is relevant and keyword-rich for better SEO."
+        description = soup.find('meta', {'name': 'description'})
+        meta_description = description['content'] if description else 'No meta description found'
+        seo_details['Meta Description'] = meta_description
+        if meta_description == 'No meta description found':
+            seo_details['Meta Description Suggestion'] = "Add a meta description that accurately describes the page content (under 160 characters)."
+        keywords = soup.find('meta', {'name': 'keywords'})
+        meta_keywords = keywords['content'] if keywords else 'No meta keywords found'
+        seo_details['Meta Keywords'] = meta_keywords
+        if meta_keywords == 'No meta keywords found':
+            seo_details['Meta Keywords Suggestion'] = "Consider adding meta keywords, though they are less important for modern SEO."
+        h1_tag = soup.find('h1')
+        seo_details['H1 Tag'] = h1_tag.string if h1_tag else 'No H1 tag found'
+        if h1_tag is None:
+            seo_details['H1 Tag Suggestion'] = "Add an H1 tag to describe the main topic of the page. It’s critical for SEO."
+        images = soup.find_all('img')
+        alt_texts = [img.get('alt', 'No alt attribute') for img in images]
+        seo_details['Image Alt Texts'] = alt_texts
+        alt_suggestions = []
+        for alt in alt_texts:
+            if alt == 'No alt attribute' or alt == '':
+                alt_suggestions.append('Ensure all images have descriptive alt text.')
+        if alt_suggestions:
+            seo_details['Image Alt Texts Suggestion'] = alt_suggestions
+        return seo_details
+    else:
+        print(f"Failed to retrieve the page. Status code: {response.status_code}")
+        return None
